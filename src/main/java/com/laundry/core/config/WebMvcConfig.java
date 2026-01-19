@@ -16,6 +16,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(tenantInterceptor)
                 .addPathPatterns("/**") // Captura todo
                 .excludePathPatterns(
+                        "/api/health",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/swagger-ui.html",
@@ -23,4 +24,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/favicon.ico"
                 );
     }
+
 }
