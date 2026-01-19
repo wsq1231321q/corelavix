@@ -23,6 +23,9 @@ public class OpenAPIConfig {
     @Bean
     public OperationCustomizer customizeOperation() {
         return (operation, handlerMethod) -> {
+            if (handlerMethod.getMethod().getName().equals("health")) {
+            return operation;
+        }
             Parameter tenantIdHeader = new Parameter()
                     .in("header")
                     .required(true)
@@ -44,3 +47,4 @@ public class OpenAPIConfig {
         };
     }
 }
+
