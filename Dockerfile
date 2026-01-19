@@ -1,26 +1,28 @@
-# Etapa 1: Construcción del JAR
-FROM maven:3.8.4-openjdk-17-slim AS build
+# Etapa 1: Construcción (Maven con Java 21 para coincidir con tu proyecto)
+FROM maven:3.9.6-eclipse-temurin-21-jammy AS build
 
 WORKDIR /app
 
-# Copiamos el POM y las fuentes
+# Aprovechar el caché de Docker para las dependencias
 COPY pom.xml .
-COPY src ./src
+RUN mvn dependency:go-offline
 
-# Compilamos el proyecto (sin correr tests)
+# Copiar fuentes y compilar
+COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Imagen final ligera con JAR listo para ejecutarse
-FROM openjdk:17-jdk-slim
+# Etapa 2: Imagen de ejecución (Runtime ligero)
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-# Copiamos el .jar desde el contenedor anterior
+# Copiamos el JAR generado
 COPY --from=build /app/target/*.jar app.jar
 
-# Puerto expuesto (ajústalo si usas uno distinto)
+# EXPOSE es informativo, pero ayuda a Koyeb a detectar el puerto
 EXPOSE 8080
 
-# Comando para ejecutar la app
-ENTRYPOINT ["java", "-jar", "app.jar"]
-
+# Optimizaciones de JVM para contenedores pequeños:
+# -XX:+UseContainerSupport: Hace que la JVM respete los límites de RAM de Koyeb
+# -Xmx: Limitamos el heap para dejar espacio a la memoria no-heap
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-Xmx256m", "-jar", "app.jar"]
